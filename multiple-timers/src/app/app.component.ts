@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { timer, Subscription } from 'rxjs';
-import { Observable } from 'rxjs';
 import { map, take } from 'rxjs/operators';
+
 
 
 @Component({
@@ -14,7 +14,7 @@ export class AppComponent {
 
   timers = new Map();
   timerIds = this.getLocalStorge("timerIds") ? JSON.parse(this.getLocalStorge("timerIds")) : [];
-  id = 0;
+  id = 1;
 
   ngOnInit(){
 
@@ -22,6 +22,23 @@ export class AppComponent {
       this.start_timer( parseInt(this.getLocalStorge(timerId)) , timerId);
       this.id = timerId + 1;
     })
+
+  }
+
+  delete_timer(timerId){
+    this.timerIds.forEach((element, index) => {
+      if(element == timerId) this.timerIds.splice(index, 1);
+    });
+
+    this.setLocalStorage("timerIds", JSON.stringify(this.timerIds));
+
+    this.timers.get(timerId).subscription.unsubscribe();
+    this.timers.delete(timerId);
+    this.deleteLocalStorage(timerId);
+
+    if(this.timerIds.length == 0) {
+      this.id = 1;
+    }
 
   }
 
@@ -36,16 +53,20 @@ export class AppComponent {
       id : id,
       timer : t
     }
-          
-    this.timers.set(timerObject.id,timerObject);
-    this.timerIds[timerObject.id] = timerObject.id;
 
-    this.setLocalStorage("timerIds", JSON.stringify(this.timerIds));
-    this.setLocalStorage(timerObject.id, start);                          
-    
-    t.subscribe(val => {
+    var subscription = t.subscribe(val => {
       this.setLocalStorage(timerObject.id, val);
     })
+
+    timerObject["subscription"] = subscription;
+    
+    if(!this.timers.has(timerObject.id) && !this.timerIds.find(element => element == timerObject.id)){
+      this.timerIds.push(timerObject.id)
+    }
+
+    this.timers.set(timerObject.id,timerObject);
+    this.setLocalStorage("timerIds", JSON.stringify(this.timerIds));
+    this.setLocalStorage(timerObject.id, start);                          
 
     this.id++;
   }
@@ -56,5 +77,9 @@ export class AppComponent {
 
   setLocalStorage(key, value){
     localStorage.setItem(key.toString(), value.toString());
+  }
+
+  deleteLocalStorage(key){
+    localStorage.removeItem(key.toString());
   }
 }

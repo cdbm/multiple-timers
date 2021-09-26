@@ -2,6 +2,7 @@
   <button (click)="start_timer()">Create timer</button>
 
   <div *ngFor="let timerId of timerIds">
-    {{timers.get(timerId).id }} {{timers.get(timerId).timer| async}}
+    {{timers.get(timerId).id }}. {{timers.get(timerId).timer | async }}
+    <button (click)="delete_timer(timerId)">X</button>
   </div>
 </div>
